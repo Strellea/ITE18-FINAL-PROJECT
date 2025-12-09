@@ -1,0 +1,91 @@
+/* Reset defaults */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(to top, #fceabb 10%, #87cefa 60%, #00bfff 100%);
+        background-size: 200% 200%;
+        animation: wave 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes wave {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .container {
+        background: #87cefa; /* sky blue card */
+        padding: 40px 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        border: 2px solid #00bfff;
+        color: #fff;
+    }
+
+    h2 {
+        margin-bottom: 30px;
+        color: #fff; 
+        font-size: 24px;
+        text-shadow: 1px 1px 2px #00bfff;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        border: 1px solid #00bfff;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+
+    input::placeholder {
+        color: #666;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: #fff;
+        box-shadow: 0 0 8px rgba(255,255,255,0.7);
+        background: rgba(255, 255, 255, 1);
+    }
+
+    button {
+        margin-top: 10px;
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 12px;
+        background-color: #00bfff; /* ocean blue button */
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(0,191,255,0.4);
+        transition: all 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #1ec0ff;
+        box-shadow: 0 5px 25px rgba(30,192,255,0.6);
+    }
+
+    @media(max-width: 500px) {
+        .login-container {
+            padding: 30px 20px;
+        }
+    }

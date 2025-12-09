@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<link rel="stylesheet" href="style.css">
+<title>Boat Game Login</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Boat Game Login</h2>
+        <input id="email" placeholder="Email" type="email"><br>
+        <input id="password" type="password" placeholder="Password"><br>
+        <button id="loginBtn">Login</button>
+        <button id="registerBtn" onclick="window.location.href='register.html'">Register</button>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+
+        document.getElementById("loginBtn").onclick = async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) return alert(error.message);
+
+            // Store token
+            localStorage.setItem("token", data.session.access_token);
+
+            location.href = "home.html";
+        };
+    </script>
+</body>
+</html>

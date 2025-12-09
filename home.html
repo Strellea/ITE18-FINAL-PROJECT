@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boat Game | Home</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- PROFILE SECTION -->
+    <section class="profile-card">
+      <div class="profile-header">
+      <h2>Your Profile</h2>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+      </div>
+      <p><strong>Username:</strong> <span id="username">Player123</span></p>
+      <p><strong>Highest Score:</strong> <span id="highscore">0</span></p>
+
+      <!-- PLAY BUTTON -->
+      <button class="play-btn" onclick="window.location.href='game.html'">
+        ▶ Play Game
+      </button>
+
+      <!-- LOGOUT BUTTON -->
+    </section>
+
+    <!-- LEADERBOARD SECTION -->
+    <section class="leaderboard-card">
+      <h2>Leaderboard</h2>
+      <ul id="leaderboard">
+        <li>1. ExamplePlayer — 120</li>
+        <li>2. Someone — 90</li>
+        <li>3. Another — 50</li>
+      </ul>
+    </section>
+
+  </div>
+
+</body>
+
+<script>
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = 'login.html';
+  }
+
+  // Fetch profile info
+  fetch('http://localhost:3000/profile', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById('username').textContent = data.username;
+    document.getElementById('highscore').textContent = data.highscore;
+  })
+  .catch(error => console.error('Error fetching profile data:', error));
+
+  // Fetch leaderboard
+  fetch('http://localhost:3000/leaderboard', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    const leaderboardList = document.getElementById('leaderboard');
+    leaderboardList.innerHTML = '';
+
+    data.forEach((entry, index) => {
+      const listItem = document.createElement('li');
+      listItem.textContent = `${index + 1}. ${entry.username} — ${entry.score}`;
+      leaderboardList.appendChild(listItem);
+    });
+  })
+  .catch(error => console.error('Error fetching leaderboard data:', error));
+
+  // Logout functionality
+  document.getElementById('logoutBtn').onclick = () => {
+    localStorage.removeItem('token'); // remove token
+    window.location.href = 'login.html'; // redirect to login
+  };
+</script>
+</html>

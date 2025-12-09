@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="game.css">
+<title>Boat Runner Game</title>
+</head>
+<body>
+<div id="score">Score: 0</div>
+
+<div id="gameover">
+  Game Over!
+  <div id="gameover-buttons">
+    <button id="saveScoreBtn">Save Score</button>
+    <button id="backHomeBtn" onclick="window.location.href='home.html'">Back to Home</button>
+    <button id="retry" onclick="window.location.href='game.html'">Retry</button>
+  </div>  
+</div>
+
+<script type="module" src="src/main.js"></script>
+
+<script>
+  document.getElementById('saveScoreBtn').onclick = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) return alert('You must be logged in to save your score.');
+  const finalScore = parseInt(document.getElementById('score').textContent.replace('Score: ', ''), 10);
+  try {
+    const response = await fetch('http://localhost:3000/score', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ score: finalScore })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
+    alert('Score saved successfully!');
+  } catch (err) {
+    console.error(err);
+    alert('Failed to save score.');
+  }
+};
+
+</script>
+</body>
+</html>

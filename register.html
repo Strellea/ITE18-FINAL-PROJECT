@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<title>Create Account</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Create Account</h2>
+
+        <input id="email" placeholder="Email" type="email"><br>
+        <input id="password" type="password" placeholder="Password"><br>
+        <input id="username" placeholder="Username"><br>
+        <button id="registerBtn">Register</button>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+
+        document.getElementById("registerBtn").onclick = async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const username = document.getElementById("username").value;
+
+            if (!email || !password || !username) return alert("All fields are required");
+
+            // 1️⃣ Sign up
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                email,
+                password
+            });
+
+            if (signUpError) return alert(signUpError.message);
+
+            const user = signUpData.user;
+            if (!user) return alert("User not found after sign up");
+
+            // 2️⃣ Insert profile row
+            const { error: profileError } = await supabase
+                .from("Profiles")
+                .insert({ id: user.id, username });
+
+            if (profileError) return alert(profileError.message);
+
+            alert("Registered and profile created!");
+            location.href = "index.html";
+        };
+    </script>
+</body>
+</html>
