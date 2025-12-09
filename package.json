@@ -1,0 +1,26 @@
+{
+  "name": "threejs-shooting-game",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "nodemon backend/server.js"
+  },
+  "devDependencies": {
+    "node": "^20.19.6",
+    "nodemon": "^3.1.11",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.86.2",
+    "cors": "^2.8.5",
+    "dat.gui": "^0.7.9",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mysql2": "^3.15.3",
+    "three": "^0.154.0"
+  }
+}
