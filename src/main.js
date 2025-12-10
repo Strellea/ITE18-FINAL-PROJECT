@@ -236,7 +236,7 @@ audioLoader.load('/sounds/music.mp3', buffer => {
     bgm.setVolume(0.4);  // Lower volume so it's not too loud
 });
 
-// --- MUTE BUTTON UI ---
+// --- BG MUSIC ---
 const muteBtn = document.createElement('button');
 muteBtn.innerText = 'Music: ON'; // Default to OFF until interaction starts it
 muteBtn.style.display = 'none';
@@ -373,6 +373,7 @@ const gameOverEl = document.getElementById('gameover');
 let gameOverPlayed = false;
 let score = 0;
 let gameOver = false;
+let isPaused = false;
 
 let moveLeft = false;
 let moveRight = false;
@@ -397,7 +398,7 @@ window.addEventListener('keydown', e => {
         // Optional: Trigger splash
         if (boat.userData.hitSplash) {
             boat.userData.hitSplash.trigger(
-                new THREE.Vector3(boat.position.x - 0.5, boat.position.y + 0.2, boat.position.z- 1.0)
+                new THREE.Vector3(boat.position.x - 0.5, 0.0, boat.position.z- 1.0)
             );
         }
     }
@@ -408,7 +409,7 @@ window.addEventListener('keydown', e => {
         // Optional: Trigger splash
         if (boat.userData.hitSplash) {
             boat.userData.hitSplash.trigger(
-                new THREE.Vector3(boat.position.x - 0.5, boat.position.y + 0.2, boat.position.z - 1.0)
+                new THREE.Vector3(boat.position.x - 0.5, 0.0, boat.position.z - 1.0)
             );
         }
     }
@@ -423,36 +424,133 @@ window.addEventListener('keyup', e => {
 let obstacleSpeed = 0.3;       
 const speedIncrement = 0.00030;
 
+const textureLoader = new THREE.TextureLoader();
+let woodTexture = null;
+let rockTexture = null;
+
 // Spawn obstacle
 function spawnObstacle(){
-    const rockGeo = new THREE.BoxGeometry(1,1,1);
-    const rockMat = new THREE.MeshStandardMaterial({color:0x555555});
-    const rock = new THREE.Mesh(rockGeo,rockMat);
-    rock.position.x = (Math.random()-0.5)*6;
-    rock.position.y = 0.5;
-    rock.position.z = boat ? boat.position.z - 40 : -40;
-    scene.add(rock);
-    obstacles.push(rock);
+    // Create more irregular rock shape using multiple geometries
+    const rockGroup = new THREE.Group();
+    
+    // Main rock body - use DodecahedronGeometry for more natural look
+    const mainGeo = new THREE.DodecahedronGeometry(0.6, 0);
+    const rockMat = new THREE.MeshStandardMaterial({
+        map: rockTexture || null,
+        color: rockTexture ? 0xffffff : 0x3a3a3a,
+        roughness: 0.95,
+        metalness: 0.1,
+        flatShading: true
+    });
+    const mainRock = new THREE.Mesh(mainGeo, rockMat);
+    mainRock.position.y = 0.3;
+    
+    // Add smaller rocks for detail
+    const detail1 = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.3, 0),
+        rockMat
+    );
+    detail1.position.set(0.4, 0.2, 0.2);
+    
+    const detail2 = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.25, 0),
+        rockMat
+    );
+    detail2.position.set(-0.3, 0.15, -0.2);
+    
+    rockGroup.add(mainRock, detail1, detail2);
+    
+    // Random rotation for variety
+    rockGroup.rotation.x = Math.random() * Math.PI;
+    rockGroup.rotation.y = Math.random() * Math.PI;
+    rockGroup.rotation.z = Math.random() * Math.PI;
+    
+    rockGroup.position.x = (Math.random()-0.5)*6;
+    rockGroup.position.y = 0.5;
+    rockGroup.position.z = boat ? boat.position.z - 40 : -40;
+    
+    scene.add(rockGroup);
+    obstacles.push(rockGroup);
 }
-
-const textureLoader = new THREE.TextureLoader();
-const woodTexture = textureLoader.load('/textures/wood.jpeg');
 
 function spawnLog(){
-    const logGeo = new THREE.CylinderGeometry(0.5, 0.5, 2, 16); // radiusTop, radiusBottom, height, segments
-    const logMat = new THREE.MeshStandardMaterial({map: woodTexture});
+    const logGroup = new THREE.Group();
+
+    const logGeo = new THREE.CylinderGeometry(0.3, 0.35, 3, 20); // radiusTop, radiusBottom, height, segments
+    const logMat = new THREE.MeshStandardMaterial({
+        map: woodTexture || null,
+        color: woodTexture ? 0xffffff : 0x8B4513,
+        roughness: 0.85,  
+        metalness: 0.0 
+    });
     const log = new THREE.Mesh(logGeo, logMat);
 
-    // Rotate so it lies flat
-    log.rotation.z = Math.PI / 2;
+    // Add end caps with different color for tree rings
+    const endCapGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.1, 20);
+    const endCapMat = new THREE.MeshStandardMaterial({
+        map: woodTexture || null,
+        color: woodTexture ? 0xffffff : 0xD2691E,
+        roughness: 0.9
+    });
 
-    log.position.x = (Math.random() - 0.5) * 6; // within ocean width
-    log.position.y = 0.25; // slightly above water
-    log.position.z = boat ? boat.position.z - 40 : -40;
+    const endCap1 = new THREE.Mesh(endCapGeo, endCapMat);
+    endCap1.position.y = 1.5;
+    const endCap2 = new THREE.Mesh(endCapGeo, endCapMat);
+    endCap2.position.y = -1.5;
 
-    scene.add(log);
-    obstacles.push(log);
+    // Add small branch stubs for realism
+    const branchGeo = new THREE.CylinderGeometry(0.08, 0.12, 0.4, 8);
+    const branch1 = new THREE.Mesh(branchGeo, logMat);
+    branch1.position.set(0.25, 0.5, 0);
+    branch1.rotation.z = Math.PI / 3;
+    
+    const branch2 = new THREE.Mesh(branchGeo, logMat);
+    branch2.position.set(-0.25, -0.3, 0);
+    branch2.rotation.z = -Math.PI / 4;
+    
+    logGroup.add(log, endCap1, endCap2, branch1, branch2);
+    
+    // Rotate so it lies flat and add some variety
+    logGroup.rotation.z = Math.PI / 2;
+    logGroup.rotation.y = Math.random() * Math.PI * 2;
+    
+    logGroup.position.x = (Math.random() - 0.5) * 6;
+    logGroup.position.y = 0.25;
+    logGroup.position.z = boat ? boat.position.z - 40 : -40;
+
+    scene.add(logGroup);
+    obstacles.push(logGroup);
 }
+
+// Load wood texture with error handling
+textureLoader.load(
+    '/models/textures/wood.jpg',
+    (texture) => {
+        woodTexture = texture;
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(2, 2);
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        console.log('Wood texture loaded successfully');
+    },
+    undefined,
+    (error) => {
+        console.error('Error loading wood texture:', error);
+    }
+);
+
+// Load rusty metal texture
+textureLoader.load(
+    '/models/textures/rock.jpg',
+    (texture) => {
+        rockTexture = texture;
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        console.log('Rusty texture loaded successfully');
+    },
+    undefined,
+    (error) => {
+        console.log('Rusty texture not found, using fallback color');
+    }
+);
 
 
 // Clock
@@ -488,8 +586,8 @@ function animate() {
                 boat.userData.bowSplash.trigger(
                     new THREE.Vector3(
                         boat.position.x,
-                        boat.position.y - 0.25,
-                        boat.position.z + 1.0
+                        0.0,
+                        boat.position.z + 1.8
                     )
                 );
                 splashTimer = 0;
@@ -502,7 +600,7 @@ function animate() {
     }
 
         // GAME LOGIC (Stops on Game Over)
-        if (!gameOver) {
+        if (!gameOver && !isPaused) {
         
         if (boat) {
             if (moveLeft) boat.position.x -= dodgeSpeed;
@@ -529,7 +627,7 @@ function animate() {
 
                     // Trigger the HIT splash exactly at the impact point
                     boat.userData.hitSplash.trigger(
-                        new THREE.Vector3(boat.position.x, boat.position.y + 0.5, boat.position.z - 3.0)
+                        new THREE.Vector3(boat.position.x, 0.0, boat.position.z - 3.0)
                     );
                 }
 
@@ -571,4 +669,33 @@ window.addEventListener('resize', ()=>{
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Pause functionality
+const pauseBtn = document.getElementById('pauseBtn');
+const pauseMenu = document.getElementById('pauseMenu');
+const resumeBtn = document.getElementById('resumeBtn');
+
+function togglePause() {
+  if (gameOver) return;
+  
+  isPaused = !isPaused;
+  pauseMenu.style.display = isPaused ? 'block' : 'none';
+  pauseBtn.style.display = isPaused ? 'none' : 'block';
+  
+  // Pause/resume background music
+  if (isPaused && bgm.isPlaying) {
+    bgm.pause();
+  } else if (!isPaused && isMusicPlaying && bgm.buffer) {
+    bgm.play();
+  }
+}
+
+pauseBtn.addEventListener('click', togglePause);
+resumeBtn.addEventListener('click', togglePause);
+
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    togglePause();
+  }
 });

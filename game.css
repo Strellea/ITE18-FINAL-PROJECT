@@ -15,6 +15,68 @@
     text-shadow: 1px 1px 2px #000;
   }
 
+  #pauseBtn {
+  position: absolute;
+  top: 60px;
+  left: 20px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 100;
+}
+
+#pauseBtn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+#pauseMenu {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  padding: 40px;
+  border-radius: 10px;
+  text-align: center;
+  z-index: 1000;
+}
+
+#pauseMenu h2 {
+  color: white;
+  font-size: 48px;
+  margin-bottom: 30px;
+}
+
+#pauseMenu button {
+  display: block;
+  width: 200px;
+  margin: 15px auto;
+  padding: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: none;
+  background: #4CAF50;
+  color: white;
+}
+
+#pauseMenu button:hover {
+  background: #45a049;
+}
+
+#quitBtn {
+  background: #f44336 !important;
+}
+
+#quitBtn:hover {
+  background: #da190b !important;
+}
+  
   #gameover { 
     position: fixed; 
     top: 50%; 

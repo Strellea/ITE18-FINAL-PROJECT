@@ -39,8 +39,8 @@
 
             // 2️⃣ Insert profile row
             const { error: profileError } = await supabase
-                .from("Profiles")
-                .insert({ id: user.id, username });
+                .from("profiles")
+                .insert({ user_id:user.id, username });
 
             if (profileError) return alert(profileError.message);
 
