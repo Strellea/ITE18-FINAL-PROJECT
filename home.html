@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Boat Game | Home</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚤</text></svg>">
   <link rel="stylesheet" href="home.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -36,120 +36,6 @@
 
   </div>
 
+  <script type="module" src="home.js"></script>
 </body>
-
-<script>
-  // Initialize Supabase client (replace with your actual keys)
-  const supabase = window.supabase.createClient(
-    'https://vzrqjuzwifsigdpbghvh.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6cnFqdXp3aWZzaWdkcGJnaHZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxODc3NzcsImV4cCI6MjA4MDc2Mzc3N30.sCpcxv_uH6BrF5y6fhL1IO4Xw_mk249hYTVXy-Rby-g'
-  );
-
-  // Helper function to get the current session token
-  async function getAuthToken() {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token;
-  }
-
-  // Helper function for authenticated fetch
-  async function authFetch(url, options = {}) {
-    const token = await getAuthToken();
-    
-    if (!token) {
-      console.error('No auth token found, redirecting to login');
-      window.location.href = 'login.html';
-      return;
-    }
-    
-    const headers = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...options.headers
-    };
-    
-    try {
-      const response = await fetch(url, { ...options, headers });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Fetch error:', error);
-      throw error;
-    }
-  }
-
-  // Fetch profile data
-  async function loadProfile() {
-    try {
-      const data = await authFetch('http://localhost:3000/profile');
-      document.getElementById('username').textContent = data.username;
-      document.getElementById('highscore').textContent = data.highscore;
-    } catch (error) {
-      console.error('Error fetching profile data:', error);
-      document.getElementById('username').textContent = 'Error loading';
-      document.getElementById('highscore').textContent = 'Error';
-    }
-  }
-
-  // Fetch leaderboard data
-  async function loadLeaderboard() {
-    try {
-      const data = await authFetch('http://localhost:3000/leaderboard');
-      const leaderboardList = document.getElementById('leaderboard');
-      leaderboardList.innerHTML = '';
-      
-      if (data.length === 0) {
-        leaderboardList.innerHTML = '<li>No scores yet!</li>';
-        return;
-      }
-      
-      data.forEach((entry, index) => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `${index + 1}. ${entry.username} — ${entry.score}`;
-        leaderboardList.appendChild(listItem);
-      });
-    } catch (error) {
-      console.error('Error fetching leaderboard data:', error);
-      document.getElementById('leaderboard').innerHTML = '<li>Error loading leaderboard</li>';
-    }
-  }
-
-  // Check if user is logged in when page loads
-  async function checkAuth() {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      window.location.href = 'login.html';
-      return;
-    }
-    
-    // Load data if authenticated
-    loadProfile();
-    loadLeaderboard();
-  }
-
-  // Logout functionality
-  document.getElementById('logoutBtn').onclick = async () => {
-    try {
-      // Sign out from Supabase
-      await supabase.auth.signOut();
-      
-      // Remove token from localStorage (if you're still using it)
-      localStorage.removeItem('token');
-      
-      // Redirect to login
-      window.location.href = 'login.html';
-    } catch (error) {
-      console.error('Error logging out:', error);
-      // Force redirect anyway
-      window.location.href = 'login.html';
-    }
-  };
-
-  // Run on page load
-  checkAuth();
-</script>
 </html>

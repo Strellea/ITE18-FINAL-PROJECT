@@ -133,7 +133,6 @@ const RippleShader = {
 };
 
 let rippleMat;
-let splashTimer = 0; 
 
 class SplashParticles {
     constructor(scene, count = 20, size = 0.1) {
