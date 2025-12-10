@@ -21,17 +21,11 @@ const WakeShader = {
             // Multi-layered ripple effect
             vec3 pos = position;
             
-            // Primary wave
+
             float wave1 = sin(pos.x * 15.0 + time * speed * 2.0) * 0.04;
-            
-            // Secondary crossing wave
             float wave2 = sin(pos.x * 8.0 - time * speed * 1.5) * 0.025;
-            
-            // Turbulence near the center
             float centerDist = abs(pos.x);
             float turbulence = sin(pos.x * 20.0 + time * speed * 3.0) * 0.02 * (1.0 - centerDist);
-            
-            // Expanding ripples from back
             float ripple = sin(pos.y * 10.0 - time * speed * 2.5) * 0.015;
             
             pos.y += wave1 + wave2 + turbulence + ripple;
@@ -54,26 +48,17 @@ const WakeShader = {
             float foam1 = sin(uv.x * 25.0 + time * speed) * 0.5 + 0.5;
             float foam2 = sin(uv.x * 18.0 - time * speed * 0.7 + uv.y * 10.0) * 0.5 + 0.5;
             float foamPattern = foam1 * foam2;
-            
-            // Expanding rings from the back
+
             float rings = sin((uv.y + time * 0.3 * speed) * 15.0) * 0.5 + 0.5;
             rings = pow(rings, 3.0);
             
-            // Fade out back of wake with sharper transition
             float fadeBack = smoothstep(0.5, 0.0, vUV.y);
-            
-            // Fade sides with smoother curve
             float sideFade = 1.0 - pow(abs(vUV.x - 0.5) * 2.0, 1.5);
             
             // Combine patterns
             float pattern = mix(foamPattern, rings, 0.4);
-            
-            // Enhanced alpha with pattern
             float alpha = fadeBack * sideFade * opacity * (0.6 + pattern * 0.4);
-
-            // Slight blue tint for realism
             vec3 color = mix(vec3(1.0, 1.0, 1.0), vec3(0.9, 0.95, 1.0), 0.3);
-
             gl_FragColor = vec4(color, alpha);
         }
     `
@@ -155,6 +140,22 @@ class SplashParticles {
         this.points.position.copy(position);
         this.points.visible = true;
         this.life = 1.0;
+
+        const posAttr = this.points.geometry.attributes.position;
+        
+        // 2. Reset and re-randomize velocities and local positions for a new spray
+        for (let i = 0; i < this.count; i++) {
+            // Reset local position to zero (relative to this.points.position)
+            posAttr.array[i * 3] = 0;
+            posAttr.array[i * 3 + 1] = 0;
+            posAttr.array[i * 3 + 2] = 0;
+
+            // Re-randomize velocity for a fresh upward spray
+            this.velocities[i * 3] = (Math.random() - 0.5) * 0.8;  // Wider spread
+            this.velocities[i * 3 + 1] = Math.random() * 1.0 + 0.5; // Stronger upward thrust
+            this.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.4;
+        }
+        posAttr.needsUpdate = true;
     }
 
     update(delta) {
@@ -209,7 +210,7 @@ const ocean = new THREE.Mesh(oceanGeo, oceanMat);
 ocean.rotation.x = -Math.PI/2;
 scene.add(ocean);
 
-// --- SOUND EFFECTS ---
+// --- SOUND EFFECTS & MUSIC ---
 const listener = new THREE.AudioListener();
 camera.add(listener);
 
@@ -217,6 +218,7 @@ const audioLoader = new THREE.AudioLoader();
 
 const dodgeSound = new THREE.Audio(listener);
 const gameOverSound = new THREE.Audio(listener);
+const bgm = new THREE.Audio(listener);
 
 audioLoader.load('/sounds/dodge.wav', buffer => {
     dodgeSound.setBuffer(buffer);
@@ -227,6 +229,39 @@ audioLoader.load('/sounds/gameover.wav', buffer => {
     gameOverSound.setBuffer(buffer);
     gameOverSound.setVolume(1.0);
 });
+
+audioLoader.load('/sounds/music.mp3', buffer => {
+    bgm.setBuffer(buffer);
+    bgm.setLoop(true);   // Loop the music
+    bgm.setVolume(0.4);  // Lower volume so it's not too loud
+});
+
+// --- MUTE BUTTON UI ---
+const muteBtn = document.createElement('button');
+muteBtn.innerText = 'Music: ON'; // Default to OFF until interaction starts it
+muteBtn.style.display = 'none';
+document.body.appendChild(muteBtn);
+
+let isMusicPlaying = false;
+
+// Function to toggle music (Mute/Unmute)
+function toggleBGM() {
+    if (bgm.isPlaying) {
+        bgm.pause();
+        isMusicPlaying = false; // Player chose to turn it off
+    } else if (bgm.buffer) {
+        bgm.play();
+        isMusicPlaying = true; // Player chose to turn it on
+    }
+}
+
+// Add Mute/Unmute functionality for testing (e.g., press 'M')
+window.addEventListener('keydown', e => {
+    if (e.code === 'KeyM') {
+        toggleBGM();
+    }
+});
+
 
 // Load GLTF Boat
 let boat;
@@ -252,7 +287,6 @@ loader.load(
         // store for animation loop
         boat.userData.bowSplash = bowSplash;
         boat.userData.hitSplash = hitSplash;
-
 
 
         // --- WAKE GEOMETRY --- //
@@ -324,6 +358,10 @@ function createFallbackBoat() {
     boat = new THREE.Mesh(boatGeo, boatMat);
     boat.position.set(0,0.25,0);
     scene.add(boat);
+
+    // Add particle systems to fallback boat too
+    boat.userData.bowSplash = new SplashParticles(scene, 20, 0.8);
+    boat.userData.hitSplash = new SplashParticles(scene, 80, 0.3);
 }
 
 
@@ -344,23 +382,37 @@ const dodgeSpeed = 0.2; // how fast the boat moves sideways
 window.addEventListener('keydown', e => {
     if (gameOver || !boat) return;
 
+    // browser policy: Start music on first interaction if it hasn't started
+    if (!bgm.isPlaying && !isMusicPlaying && bgm.buffer) {
+        bgm.play();
+        isMusicPlaying = true;
+        muteBtn.innerText = 'Music: ON';
+        muteBtn.style.background = 'rgba(100, 255, 100, 0.7)';
+    }
+
     if (e.code === 'KeyA') {
         moveLeft = true;
-        dodgeSound.play();
+        if(dodgeSound.buffer) dodgeSound.play();
 
-        boat.userData.hitSplash.trigger(
-            new THREE.Vector3(boat.position.x, boat.position.y + 0.2, boat.position.z)
-        );
+        // Optional: Trigger splash
+        if (boat.userData.hitSplash) {
+            boat.userData.hitSplash.trigger(
+                new THREE.Vector3(boat.position.x - 0.5, boat.position.y + 0.2, boat.position.z- 1.0)
+            );
+        }
     }
     if (e.code === 'KeyD') {
         moveRight = true;
-        dodgeSound.play();
+        if(dodgeSound.buffer) dodgeSound.play();
 
-        boat.userData.hitSplash.trigger(
-            new THREE.Vector3(boat.position.x, boat.position.y + 0.2, boat.position.z)
-        );
+        // Optional: Trigger splash
+        if (boat.userData.hitSplash) {
+            boat.userData.hitSplash.trigger(
+                new THREE.Vector3(boat.position.x - 0.5, boat.position.y + 0.2, boat.position.z - 1.0)
+            );
+        }
     }
-});
+});    
 
 
 window.addEventListener('keyup', e => {
@@ -408,60 +460,59 @@ const clock = new THREE.Clock();
 
 function animate() {
     requestAnimationFrame(animate);
+    const delta = clock.getDelta();  
 
-    const delta = clock.getDelta();   // ✅ compute delta FIRST
+    // Shaders & Water
+    if (boat && WakeShader.uniforms) {
+        WakeShader.uniforms.time.value += delta;
+    }
+    if (rippleMat) rippleMat.uniforms.time.value += delta * 0.8;
 
-    if (!gameOver) {
+    const pos = ocean.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+        const z = 0.3 * Math.sin(x * 0.5 + clock.elapsedTime * 2) +
+                  0.3 * Math.cos(y * 0.5 + clock.elapsedTime * 2);
+        pos.setZ(i, z);
+    }
+    pos.needsUpdate = true;
+    ocean.geometry.computeVertexNormals();
 
-        // wake animation
-        if (boat && WakeShader.uniforms) {
-            WakeShader.uniforms.time.value += delta;
+    // Particles
+    if (boat) {
+        // Only trigger NEW bow splashes if the game is running
+        if (!gameOver) {
+            splashTimer += delta;
+            if (splashTimer > 0.12) {
+                boat.userData.bowSplash.trigger(
+                    new THREE.Vector3(
+                        boat.position.x,
+                        boat.position.y - 0.25,
+                        boat.position.z + 1.0
+                    )
+                );
+                splashTimer = 0;
+            }
         }
 
-        // Ripple animation
-        if (rippleMat) rippleMat.uniforms.time.value += delta * 0.8;
+        // ALWAYS update physics for particles (so they fall/fade even after gameover)
+        if (boat.userData.bowSplash) boat.userData.bowSplash.update(delta);
+        if (boat.userData.hitSplash) boat.userData.hitSplash.update(delta);
+    }
 
-        // Bow splash
-        splashTimer += delta;
-        if (boat && splashTimer > 0.12) {
-            boat.userData.bowSplash.trigger(
-                new THREE.Vector3(
-                    boat.position.x - 2.4,
-                    boat.position.y - 0.1,
-                    boat.position.z
-                )
-            );
-            splashTimer = 0;
-        }
-
-        if (boat) {
-            boat.userData.bowSplash.update(delta);
-            if (boat.userData.hitSplash) boat.userData.hitSplash.update(delta);
-        }
-
-        // Ocean waves
-        const pos = ocean.geometry.attributes.position;
-        for (let i = 0; i < pos.count; i++) {
-            const x = pos.getX(i);
-            const y = pos.getY(i);
-            const z = 0.3 * Math.sin(x * 0.5 + clock.elapsedTime * 2) +
-                      0.3 * Math.cos(y * 0.5 + clock.elapsedTime * 2);
-            pos.setZ(i, z);
-        }
-        pos.needsUpdate = true;
-        ocean.geometry.computeVertexNormals();
-
-        // Boat & game logic
+        // GAME LOGIC (Stops on Game Over)
+        if (!gameOver) {
+        
         if (boat) {
             if (moveLeft) boat.position.x -= dodgeSpeed;
             if (moveRight) boat.position.x += dodgeSpeed;
-
             boat.position.x = THREE.MathUtils.clamp(boat.position.x, -3, 3);
 
             obstacles.forEach((obs, idx) => {
                 obs.position.z += obstacleSpeed;
 
-                // Collision
+                // Collision Logic
                 const dx = Math.abs(boat.position.x - obs.position.x);
                 const dz = Math.abs(boat.position.z - obs.position.z);
                 const dy = Math.abs(boat.position.y - obs.position.y);
@@ -476,12 +527,12 @@ function animate() {
                     gameOver = true;
                     gameOverEl.style.display = "block";
 
+                    // Trigger the HIT splash exactly at the impact point
                     boat.userData.hitSplash.trigger(
-                        new THREE.Vector3(boat.position.x, boat.position.y + 0.3, boat.position.z)
+                        new THREE.Vector3(boat.position.x, boat.position.y + 0.5, boat.position.z - 3.0)
                     );
                 }
 
-                // Remove passed obstacles
                 if (obs.position.z > boat.position.z + 5) {
                     scene.remove(obs);
                     obstacles.splice(idx, 1);
@@ -492,7 +543,6 @@ function animate() {
 
             obstacleSpeed += speedIncrement;
 
-            // Random spawning
             if (Math.random() < 0.02) {
                 Math.random() < 0.5 ? spawnObstacle() : spawnLog();
             }
