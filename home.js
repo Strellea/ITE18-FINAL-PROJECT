@@ -105,10 +105,10 @@ document.getElementById('logoutBtn').onclick = async () => {
   try {
     await supabase.auth.signOut();
     localStorage.removeItem('token');
-    window.location.href = 'login.html';
+    window.location.href = 'index.html';
   } catch (error) {
     console.error('Error logging out:', error);
-    window.location.href = 'login.html';
+    window.location.href = 'index.html';
   }
 };
 

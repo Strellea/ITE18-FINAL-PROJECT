@@ -28,12 +28,15 @@
 <script type="module" src="src/main.js"></script>
 
 <script>
+
+  const API_URL = 'https://ite18-final-project-production-bb3c.up.railway.app';
+
   document.getElementById('saveScoreBtn').onclick = async () => {
   const token = localStorage.getItem('token');
   if (!token) return alert('You must be logged in to save your score.');
   const finalScore = parseInt(document.getElementById('score').textContent.replace('Score: ', ''), 10);
   try {
-    const response = await fetch('http://localhost:3000/score', {
+    const response = await fetch(`${API_URL}/score`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
