@@ -7,6 +7,9 @@ const supabase = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6cnFqdXp3aWZzaWdkcGJnaHZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxODc3NzcsImV4cCI6MjA4MDc2Mzc3N30.sCpcxv_uH6BrF5y6fhL1IO4Xw_mk249hYTVXy-Rby-g'
 );
 
+// Backend API URL 
+const API_URL = 'https://ite18-final-project-production-bb3c.up.railway.app';
+
 // Helper function to get the current session token
 async function getAuthToken() {
   const { data: { session } } = await supabase.auth.getSession();
@@ -30,7 +33,11 @@ async function authFetch(url, options = {}) {
   };
   
   try {
-    const response = await fetch(url, { ...options, headers });
+    const response = await fetch(url, { 
+      ...options, 
+      headers,
+      credentials: 'include' // Add this for CORS
+    });
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -46,7 +53,7 @@ async function authFetch(url, options = {}) {
 // Fetch profile data
 async function loadProfile() {
   try {
-    const data = await authFetch('http://localhost:3000/profile');
+    const data = await authFetch(`${API_URL}/profile`); // FIXED: Using API_URL
     document.getElementById('username').textContent = data.username;
     document.getElementById('highscore').textContent = data.highscore;
   } catch (error) {
@@ -59,7 +66,7 @@ async function loadProfile() {
 // Fetch leaderboard data
 async function loadLeaderboard() {
   try {
-    const data = await authFetch('http://localhost:3000/leaderboard');
+    const data = await authFetch(`${API_URL}/leaderboard`); // FIXED: Using API_URL
     const leaderboardList = document.getElementById('leaderboard');
     leaderboardList.innerHTML = '';
     
