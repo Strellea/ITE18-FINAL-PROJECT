@@ -9,7 +9,11 @@ app.use(bodyParser.json());
 
 // Updated CORS configuration to allow requests from Vite dev server
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173','https://ite18-final-project-production-bb3c.up.railway.app/'],
+  origin: ['http://localhost:5173', 
+          'http://localhost:3000', 
+          'http://127.0.0.1:5173',
+          'https://ite18-final-project-production-bb3c.up.railway.app',
+          'https://boat-runner.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
