@@ -4,8 +4,8 @@ install dependencies: npm install
 
 
 To run:
-Frontend: npm run dev
-Backend: npm run start
+Frontend: npm run fontend
+Backend: npm run dev (for development)
 
 Game mechanics : Navigate the boat to avoid incoming obstacles and survive for as long as possible.
 
