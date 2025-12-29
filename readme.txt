@@ -7,6 +7,14 @@ To run:
 Frontend: npm run frontend
 Backend: npm run dev (for development)
 
+TECH STACK :
+
+-NODE JS
+-THREE.JS
+-HTML & CSS
+-SUPABASE
+
+
 This game follows the story of a lone man voyaging across the open ocean.
 Along his journey, he encounters drifting debris and other dangerous obstacles.
 To survive, he must skillfully navigate the waters and avoid everything that stands in his way for as long as possible.
