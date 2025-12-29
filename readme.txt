@@ -15,6 +15,6 @@ scoring system : the player gets score everytime they successfully pass through 
 
 TEAM MEMBERS
 
-Jhomary P. Dumanon  
-Estrelle Mae Adlawon
-Marian Anthonette Lutrago
+Jhomary P. Dumanon  - Team leader/ Backend /Database
+Estrelle Mae Adlawon - Backend authentication/frontend
+Marian Anthonette Lutrago - Frontend
