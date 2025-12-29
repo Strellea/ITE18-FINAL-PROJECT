@@ -756,7 +756,7 @@ function togglePause() {
     pauseMenu.style.display = isPaused ? 'block' : 'none';
     pauseBtn.style.display = isPaused ? 'none' : 'block';
     
-    if (isPaused && bgm.isPlaying) {
+    if (isPaused && bgm.isPlaying) {    
         bgm.pause();
     } else if (!isPaused && isMusicPlaying && bgm.buffer) {
         bgm.play();
